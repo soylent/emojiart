@@ -5,10 +5,23 @@
 //  Created by user on 6/13/23.
 //
 
-import Foundation
+import SwiftUI
 
 class EmojiArtDocument: ObservableObject {
-    @Published private(set) var emojiArt: EmojiArtModel
+    @Published private(set) var emojiArt: EmojiArtModel {
+        didSet {
+            if emojiArt.background != oldValue.background {
+                fetchBackgroundImageDataIfNecessary()
+            }
+        }
+    }
+    @Published var backgroundImage: UIImage?
+    @Published var backgroundImageFetchStatus = BackgroundImageFetchStatus.idle
+
+    enum BackgroundImageFetchStatus {
+        case idle
+        case fetching
+    }
 
     init() {
         emojiArt = EmojiArtModel()
@@ -16,6 +29,28 @@ class EmojiArtDocument: ObservableObject {
 
     var emojis: [EmojiArtModel.Emoji] { emojiArt.emojis }
     var background: EmojiArtModel.Background { emojiArt.background }
+
+    private func fetchBackgroundImageDataIfNecessary() {
+        backgroundImage = nil
+        switch background {
+        case .url(let url):
+            backgroundImageFetchStatus = .fetching
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                if let data = try? Data(contentsOf: url) {
+                    DispatchQueue.main.async {
+                        self?.backgroundImageFetchStatus = .idle
+                        if self?.background == EmojiArtModel.Background.url(url) {
+                            self?.backgroundImage = UIImage(data: data)
+                        }
+                    }
+                }
+            }
+        case .imageData(let data):
+            backgroundImage = UIImage(data: data)
+        case .blank:
+            break
+        }
+    }
 
     // MARK: - Intents
 
