@@ -13,8 +13,9 @@ struct EmojiArtDocumentView: View {
     @GestureState private var gestureZoomScale: CGFloat = 1
     @State private var steadyStatePanOffset: CGSize = .zero
     @GestureState private var gesturePanOffset: CGSize = .zero
-    let testEmojis = "🐢🐍🐃🐑🐎🐙🥓🌽🧈🥩🥒🌶🏈🎾🏐⚽️🚘🛻🚨🩼"
+    @State private var selectedEmojis: Set<EmojiArtModel.Emoji> = []
     private let defaultEmojiFontSize: CGFloat = 40
+    private let testEmojis = "🐢🐍🐃🐑🐎🐙🥓🌽🧈🥩🥒🌶🏈🎾🏐⚽️🚘🛻🚨🩼"
 
     private var zoomScale: CGFloat { steadyStateZoomScale * gestureZoomScale }
     private var panOffset: CGSize { (steadyStatePanOffset + gesturePanOffset) * zoomScale }
@@ -34,16 +35,20 @@ struct EmojiArtDocumentView: View {
                         .scaleEffect(zoomScale)
                         .position(convertFromEmojiCoordinates((0, 0), in: geometry))
                 )
-                .gesture(doubleTapToZoom(in: geometry.size))
+                .gesture(doubleTapToZoom(in: geometry.size).exclusively(before: singleTapToDeselect()))
 
                 if document.backgroundImageFetchStatus == .fetching {
                     ProgressView()
                 } else {
                     ForEach(document.emojis) { emoji in
                         Text(emoji.text)
+                            .border(selectedEmojis.contains(emoji) ? DrawingConstants.selectionColor : .clear)
                             .font(.system(size: fontSize(for: emoji)))
                             .scaleEffect(zoomScale)
                             .position(position(for: emoji, in: geometry))
+                            .onTapGesture {
+                                selectedEmojis.toggleMembership(of: emoji)
+                            }
                     }
                 }
             }
@@ -117,6 +122,12 @@ struct EmojiArtDocumentView: View {
             }
     }
 
+    private func singleTapToDeselect() -> some Gesture {
+        TapGesture().onEnded {
+            selectedEmojis.removeAll()
+        }
+    }
+
     private func zoomToFit(_ image: UIImage?, in size: CGSize) {
         if let image, image.size.width > 0, image.size.height > 0, size.width > 0, size.height > 0 {
             let hZoom = size.width / image.size.width
@@ -144,6 +155,10 @@ struct EmojiArtDocumentView: View {
             .onEnded { finalDragGestureValue in
                 steadyStatePanOffset = steadyStatePanOffset + (finalDragGestureValue.translation / zoomScale)
             }
+    }
+
+    private struct DrawingConstants {
+        static let selectionColor: Color = .blue
     }
 }
 
