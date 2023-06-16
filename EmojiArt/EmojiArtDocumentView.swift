@@ -9,10 +9,12 @@ import SwiftUI
 
 struct EmojiArtDocumentView: View {
     @ObservedObject var document: EmojiArtDocument
-
-    @State private var zoomScale: CGFloat = 1
+    @State private var stableStateZoomScale: CGFloat = 1
+    @GestureState private var gestureZoomScale: CGFloat = 1
     private let testEmojis = "🐢🐍🐃🐑🐎🐙🥓🌽🧈🥩🥒🌶🏈🎾🏐⚽️🚘🛻🚨🩼"
     private let defaultEmojiFontSize: CGFloat = 40
+
+    private var zoomScale: CGFloat { stableStateZoomScale * gestureZoomScale }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,8 +28,8 @@ struct EmojiArtDocumentView: View {
             ZStack {
                 Color.white.overlay(
                     OptionalImage(uiImage: document.backgroundImage)
-                        .scaleEffect(zoomScale)
                         .position(convertFromEmojiCoordinates((0, 0), in: geometry))
+                        .scaleEffect(zoomScale)
                 )
                 .gesture(doubleTapToZoom(in: geometry.size))
 
@@ -37,8 +39,8 @@ struct EmojiArtDocumentView: View {
                     ForEach(document.emojis) { emoji in
                         Text(emoji.text)
                             .font(.system(size: fontSize(for: emoji)))
-                            .position(position(for: emoji, in: geometry))
                             .scaleEffect(zoomScale)
+                            .position(position(for: emoji, in: geometry))
                     }
                 }
             }
@@ -46,6 +48,7 @@ struct EmojiArtDocumentView: View {
             .onDrop(of: [.plainText, .url, .image], isTargeted: nil) { providers, location in
                 drop(providers: providers, at: location, in: geometry)
             }
+            .gesture(zoomGesture())
         }
     }
 
@@ -115,8 +118,18 @@ struct EmojiArtDocumentView: View {
         if let image, image.size.width > 0, image.size.height > 0, size.width > 0, size.height > 0 {
             let hZoom = size.width / image.size.width
             let vZoom = size.height / image.size.height
-            zoomScale = min(hZoom, vZoom)
+            stableStateZoomScale = min(hZoom, vZoom)
         }
+    }
+
+    private func zoomGesture() -> some Gesture {
+        MagnificationGesture()
+            .updating($gestureZoomScale) { latestGestureZoomScale, gestureZoomScale, transaction in
+                gestureZoomScale = latestGestureZoomScale
+            }
+            .onEnded { gestureZoomScaleAtEnd in
+                stableStateZoomScale *= gestureZoomScaleAtEnd
+            }
     }
 }
 
