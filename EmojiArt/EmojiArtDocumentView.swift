@@ -17,7 +17,7 @@ struct EmojiArtDocumentView: View {
     private let defaultEmojiFontSize: CGFloat = 40
     private let testEmojis = "🐢🐍🐃🐑🐎🐙🥓🌽🧈🥩🥒🌶🏈🎾🏐⚽️🚘🛻🚨🩼"
 
-    private var zoomScale: CGFloat { steadyStateZoomScale * gestureZoomScale }
+    private var zoomScale: CGFloat { selectedEmojis.isEmpty ? steadyStateZoomScale * gestureZoomScale : steadyStateZoomScale }
     private var panOffset: CGSize { (steadyStatePanOffset + gesturePanOffset) * zoomScale }
 
     var body: some View {
@@ -42,9 +42,9 @@ struct EmojiArtDocumentView: View {
                 } else {
                     ForEach(document.emojis) { emoji in
                         Text(emoji.text)
-                            .border(selectedEmojis.contains(emoji) ? DrawingConstants.selectionColor : .clear)
+                            .border(isSelected(emoji) ? DrawingConstants.selectionColor : .clear)
                             .font(.system(size: fontSize(for: emoji)))
-                            .scaleEffect(zoomScale)
+                            .scaleEffect(emojiZoomScale(for: emoji))
                             .position(position(for: emoji, in: geometry))
                             .onTapGesture {
                                 selectedEmojis.toggleMembership(of: emoji)
@@ -98,6 +98,14 @@ struct EmojiArtDocumentView: View {
         convertFromEmojiCoordinates((emoji.x, emoji.y), in: geometry)
     }
 
+    private func emojiZoomScale(for emoji: EmojiArtModel.Emoji) -> CGFloat {
+        isSelected(emoji) ? steadyStateZoomScale * gestureZoomScale : steadyStateZoomScale
+    }
+
+    private func isSelected(_ emoji: EmojiArtModel.Emoji) -> Bool {
+        selectedEmojis.index(matching: emoji) != nil
+    }
+
     private func convertFromEmojiCoordinates(_ location: (x: Int, y: Int), in geometry: GeometryProxy) -> CGPoint {
         let center = geometry.frame(in: .local).center
         return CGPoint(
@@ -143,7 +151,13 @@ struct EmojiArtDocumentView: View {
                 gestureZoomScale = latestGestureZoomScale
             }
             .onEnded { finalGestureZoomScale in
-                steadyStateZoomScale *= finalGestureZoomScale
+                if selectedEmojis.isEmpty {
+                    steadyStateZoomScale *= finalGestureZoomScale
+                } else {
+                    for emoji in selectedEmojis {
+                        document.scaleEmoji(emoji, by: finalGestureZoomScale)
+                    }
+                }
             }
     }
 
