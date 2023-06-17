@@ -101,7 +101,7 @@ struct EmojiArtDocumentView: View {
     }
 
     private func position(for emoji: EmojiArtModel.Emoji, in geometry: GeometryProxy) -> CGPoint {
-        let offset = isSelected(emoji) || gestureEmojiPanOffset.emoji == emoji ? gestureEmojiPanOffset.offset : .zero
+        let offset = isSelected(emoji) || (selectedEmojis.isEmpty && gestureEmojiPanOffset.emoji == emoji) ? gestureEmojiPanOffset.offset : .zero
         return convertFromEmojiCoordinates((emoji.x, emoji.y), in: geometry) + offset * zoomScale
     }
 
@@ -187,16 +187,12 @@ struct EmojiArtDocumentView: View {
     private func dragEmojiGesture(_ emoji: EmojiArtModel.Emoji) -> some Gesture {
         DragGesture()
             .updating($gestureEmojiPanOffset) { latestDragGestureValue, gestureEmojiPanOffset, _ in
-                gestureEmojiPanOffset.emoji = emoji
-                gestureEmojiPanOffset.offset = latestDragGestureValue.translation / zoomScale
+                gestureEmojiPanOffset = (emoji: emoji, offset: latestDragGestureValue.translation / zoomScale)
             }
             .onEnded { finalDragGestureValue in
-                if selectedEmojis.isEmpty {
-                    document.moveEmoji(emoji, by: finalDragGestureValue.translation)
-                } else {
-                    for emoji in selectedEmojis {
-                        document.moveEmoji(emoji, by: finalDragGestureValue.translation)
-                    }
+                let emojisToMove = selectedEmojis.isEmpty ? [emoji] : selectedEmojis
+                for emoji in emojisToMove {
+                    document.moveEmoji(emoji, by: finalDragGestureValue.translation / zoomScale)
                 }
             }
     }
@@ -204,6 +200,7 @@ struct EmojiArtDocumentView: View {
     private func removeEmojiGesture(_ emoji: EmojiArtModel.Emoji) -> some Gesture {
         LongPressGesture().onEnded { _ in
             document.removeEmoji(emoji)
+            selectedEmojis.remove(emoji)
         }
     }
 
