@@ -14,7 +14,7 @@ struct EmojiArtDocumentView: View {
     @State private var steadyStatePanOffset: CGSize = .zero
     @GestureState private var gestureZoomScale: CGFloat = 1
     @GestureState private var gesturePanOffset: CGSize = .zero
-    @GestureState private var gestureEmojiPanOffset: CGSize = .zero
+    @GestureState private var gestureEmojiPanOffset: (emoji: EmojiArtModel.Emoji?, offset: CGSize) = (nil, .zero)
     private let defaultEmojiFontSize: CGFloat = 40
     private let testEmojis = "🐢🐍🐃🐑🐎🐙🥓🌽🧈🥩🥒🌶🏈🎾🏐⚽️🚘🛻🚨🩼"
 
@@ -45,7 +45,7 @@ struct EmojiArtDocumentView: View {
                             .scaleEffect(zoomScale(for: emoji))
                             .position(position(for: emoji, in: geometry))
                             .gesture(
-                                dragEmojiGesture()
+                                dragEmojiGesture(emoji)
                                     .simultaneously(with: singleTapToSelect(emoji))
                                     .simultaneously(with: removeEmojiGesture(emoji))
                             )
@@ -101,7 +101,7 @@ struct EmojiArtDocumentView: View {
     }
 
     private func position(for emoji: EmojiArtModel.Emoji, in geometry: GeometryProxy) -> CGPoint {
-        let offset = isSelected(emoji) ? gestureEmojiPanOffset : .zero
+        let offset = isSelected(emoji) || gestureEmojiPanOffset.emoji == emoji ? gestureEmojiPanOffset.offset : .zero
         return convertFromEmojiCoordinates((emoji.x, emoji.y), in: geometry) + offset * zoomScale
     }
 
@@ -184,14 +184,19 @@ struct EmojiArtDocumentView: View {
         }
     }
 
-    private func dragEmojiGesture() -> some Gesture {
+    private func dragEmojiGesture(_ emoji: EmojiArtModel.Emoji) -> some Gesture {
         DragGesture()
             .updating($gestureEmojiPanOffset) { latestDragGestureValue, gestureEmojiPanOffset, _ in
-                gestureEmojiPanOffset = latestDragGestureValue.translation / zoomScale
+                gestureEmojiPanOffset.emoji = emoji
+                gestureEmojiPanOffset.offset = latestDragGestureValue.translation / zoomScale
             }
             .onEnded { finalDragGestureValue in
-                for emoji in selectedEmojis {
+                if selectedEmojis.isEmpty {
                     document.moveEmoji(emoji, by: finalDragGestureValue.translation)
+                } else {
+                    for emoji in selectedEmojis {
+                        document.moveEmoji(emoji, by: finalDragGestureValue.translation)
+                    }
                 }
             }
     }
