@@ -9,16 +9,14 @@ import SwiftUI
 
 struct EmojiArtDocumentView: View {
     @ObservedObject var document: EmojiArtDocument
-    @State private var steadyStateZoomScale: CGFloat = 1
-    @GestureState private var gestureZoomScale: CGFloat = 1
-    @State private var steadyStatePanOffset: CGSize = .zero
-    @GestureState private var gesturePanOffset: CGSize = .zero
     @State private var selectedEmojis: Set<EmojiArtModel.Emoji> = []
+    @State private var steadyStateZoomScale: CGFloat = 1
+    @State private var steadyStatePanOffset: CGSize = .zero
+    @GestureState private var gestureZoomScale: CGFloat = 1
+    @GestureState private var gesturePanOffset: CGSize = .zero
+    @GestureState private var gestureEmojiPanOffset: CGSize = .zero
     private let defaultEmojiFontSize: CGFloat = 40
     private let testEmojis = "🐢🐍🐃🐑🐎🐙🥓🌽🧈🥩🥒🌶🏈🎾🏐⚽️🚘🛻🚨🩼"
-
-    private var zoomScale: CGFloat { selectedEmojis.isEmpty ? steadyStateZoomScale * gestureZoomScale : steadyStateZoomScale }
-    private var panOffset: CGSize { (steadyStatePanOffset + gesturePanOffset) * zoomScale }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -44,11 +42,9 @@ struct EmojiArtDocumentView: View {
                         Text(emoji.text)
                             .border(isSelected(emoji) ? DrawingConstants.selectionColor : .clear)
                             .font(.system(size: fontSize(for: emoji)))
-                            .scaleEffect(emojiZoomScale(for: emoji))
+                            .scaleEffect(zoomScale(for: emoji))
                             .position(position(for: emoji, in: geometry))
-                            .onTapGesture {
-                                selectedEmojis.toggleMembership(of: emoji)
-                            }
+                            .gesture(dragEmojiGesture().simultaneously(with: singleTapToSelect(emoji)))
                     }
                 }
             }
@@ -90,16 +86,23 @@ struct EmojiArtDocumentView: View {
         return found
     }
 
+    private var zoomScale: CGFloat {
+        selectedEmojis.isEmpty ? steadyStateZoomScale * gestureZoomScale : steadyStateZoomScale
+    }
+
+    private var panOffset: CGSize { steadyStatePanOffset + gesturePanOffset }
+
     private func fontSize(for emoji: EmojiArtModel.Emoji) -> CGFloat {
         CGFloat(emoji.size)
     }
 
     private func position(for emoji: EmojiArtModel.Emoji, in geometry: GeometryProxy) -> CGPoint {
-        convertFromEmojiCoordinates((emoji.x, emoji.y), in: geometry)
+        let offset = isSelected(emoji) ? gestureEmojiPanOffset : .zero
+        return convertFromEmojiCoordinates((emoji.x, emoji.y), in: geometry) + offset * zoomScale
     }
 
-    private func emojiZoomScale(for emoji: EmojiArtModel.Emoji) -> CGFloat {
-        isSelected(emoji) ? steadyStateZoomScale * gestureZoomScale : steadyStateZoomScale
+    private func zoomScale(for emoji: EmojiArtModel.Emoji) -> CGFloat {
+        isSelected(emoji) || selectedEmojis.isEmpty ? steadyStateZoomScale * gestureZoomScale : steadyStateZoomScale
     }
 
     private func isSelected(_ emoji: EmojiArtModel.Emoji) -> Bool {
@@ -168,6 +171,24 @@ struct EmojiArtDocumentView: View {
             }
             .onEnded { finalDragGestureValue in
                 steadyStatePanOffset = steadyStatePanOffset + (finalDragGestureValue.translation / zoomScale)
+            }
+    }
+
+    private func singleTapToSelect(_ emoji: EmojiArtModel.Emoji) -> some Gesture {
+        TapGesture().onEnded {
+            selectedEmojis.toggleMembership(of: emoji)
+        }
+    }
+
+    private func dragEmojiGesture() -> some Gesture {
+        DragGesture()
+            .updating($gestureEmojiPanOffset) { latestDragGestureValue, gestureEmojiPanOffset, _ in
+                gestureEmojiPanOffset = latestDragGestureValue.translation / zoomScale
+            }
+            .onEnded { finalDragGestureValue in
+                for emoji in selectedEmojis {
+                    document.moveEmoji(emoji, by: finalDragGestureValue.translation)
+                }
             }
     }
 
