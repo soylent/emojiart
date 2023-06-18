@@ -44,7 +44,11 @@ struct EmojiArtDocumentView: View {
                             .font(.system(size: fontSize(for: emoji)))
                             .scaleEffect(zoomScale(for: emoji))
                             .position(position(for: emoji, in: geometry))
-                            .gesture(dragEmojiGesture().simultaneously(with: singleTapToSelect(emoji)))
+                            .gesture(
+                                dragEmojiGesture()
+                                    .simultaneously(with: singleTapToSelect(emoji))
+                                    .simultaneously(with: removeEmojiGesture(emoji))
+                            )
                     }
                 }
             }
@@ -190,6 +194,12 @@ struct EmojiArtDocumentView: View {
                     document.moveEmoji(emoji, by: finalDragGestureValue.translation)
                 }
             }
+    }
+
+    private func removeEmojiGesture(_ emoji: EmojiArtModel.Emoji) -> some Gesture {
+        LongPressGesture().onEnded { _ in
+            document.removeEmoji(emoji)
+        }
     }
 
     private struct DrawingConstants {
