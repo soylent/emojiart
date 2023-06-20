@@ -51,7 +51,7 @@ extension RangeReplaceableCollection where Element: Identifiable {
         }
         set {
             if let index = index(matching: element) {
-                replaceSubrange(index...index, with: [newValue])
+                replaceSubrange(index ... index, with: [newValue])
             }
         }
     }
@@ -102,7 +102,7 @@ extension Character {
         // or check to see if this is a multiple scalar unicode sequence
         // (e.g. a 1 with a unicode modifier to force it to be presented as emoji 1️⃣)
         if let firstScalar = unicodeScalars.first, firstScalar.properties.isEmoji {
-            return (firstScalar.value >= 0x238d || unicodeScalars.count > 1)
+            return firstScalar.value >= 0x238D || unicodeScalars.count > 1
         } else {
             return false
         }
@@ -144,19 +144,23 @@ extension CGRect {
 }
 
 extension CGPoint {
-    static func -(lhs: Self, rhs: Self) -> CGSize {
+    static func - (lhs: Self, rhs: Self) -> CGSize {
         CGSize(width: lhs.x - rhs.x, height: lhs.y - rhs.y)
     }
-    static func +(lhs: Self, rhs: CGSize) -> CGPoint {
+
+    static func + (lhs: Self, rhs: CGSize) -> CGPoint {
         CGPoint(x: lhs.x + rhs.width, y: lhs.y + rhs.height)
     }
-    static func -(lhs: Self, rhs: CGSize) -> CGPoint {
+
+    static func - (lhs: Self, rhs: CGSize) -> CGPoint {
         CGPoint(x: lhs.x - rhs.width, y: lhs.y - rhs.height)
     }
-    static func *(lhs: Self, rhs: CGFloat) -> CGPoint {
+
+    static func * (lhs: Self, rhs: CGFloat) -> CGPoint {
         CGPoint(x: lhs.x * rhs, y: lhs.y * rhs)
     }
-    static func /(lhs: Self, rhs: CGFloat) -> CGPoint {
+
+    static func / (lhs: Self, rhs: CGFloat) -> CGPoint {
         CGPoint(x: lhs.x / rhs, y: lhs.y / rhs)
     }
 }
@@ -164,19 +168,23 @@ extension CGPoint {
 extension CGSize {
     // the center point of an area that is our size
     var center: CGPoint {
-        CGPoint(x: width/2, y: height/2)
+        CGPoint(x: width / 2, y: height / 2)
     }
-    static func +(lhs: Self, rhs: Self) -> CGSize {
+
+    static func + (lhs: Self, rhs: Self) -> CGSize {
         CGSize(width: lhs.width + rhs.width, height: lhs.height + rhs.height)
     }
-    static func -(lhs: Self, rhs: Self) -> CGSize {
+
+    static func - (lhs: Self, rhs: Self) -> CGSize {
         CGSize(width: lhs.width - rhs.width, height: lhs.height - rhs.height)
     }
-    static func *(lhs: Self, rhs: CGFloat) -> CGSize {
+
+    static func * (lhs: Self, rhs: CGFloat) -> CGSize {
         CGSize(width: lhs.width * rhs, height: lhs.height * rhs)
     }
-    static func /(lhs: Self, rhs: CGFloat) -> CGSize {
-        CGSize(width: lhs.width/rhs, height: lhs.height/rhs)
+
+    static func / (lhs: Self, rhs: CGFloat) -> CGSize {
+        CGSize(width: lhs.width / rhs, height: lhs.height / rhs)
     }
 }
 
@@ -187,15 +195,16 @@ extension CGSize {
 // then all it takes to make something that is Codable be RawRepresentable is to declare it to be so
 // (it will then get the default implementions needed to be a RawRepresentable)
 
-extension RawRepresentable where Self: Codable {
-    public var rawValue: String {
+public extension RawRepresentable where Self: Codable {
+    var rawValue: String {
         if let json = try? JSONEncoder().encode(self), let string = String(data: json, encoding: .utf8) {
             return string
         } else {
             return ""
         }
     }
-    public init?(rawValue: String) {
+
+    init?(rawValue: String) {
         if let value = try? JSONDecoder().decode(Self.self, from: Data(rawValue.utf8)) {
             self = value
         } else {
@@ -204,8 +213,8 @@ extension RawRepresentable where Self: Codable {
     }
 }
 
-extension CGSize: RawRepresentable { }
-extension CGFloat: RawRepresentable { }
+extension CGSize: RawRepresentable {}
+extension CGFloat: RawRepresentable {}
 
 // convenience functions for [NSItemProvider] (i.e. array of NSItemProvider)
 // makes the code for  loading objects from the providers a bit simpler
@@ -218,10 +227,10 @@ extension CGFloat: RawRepresentable { }
 // (though I'm certainly not going to say you shouldn't!)
 // (just trying to help you optimize your valuable time this quarter)
 
-extension Array where Element == NSItemProvider {
-    func loadObjects<T>(ofType theType: T.Type, firstOnly: Bool = false, using load: @escaping (T) -> Void) -> Bool where T: NSItemProviderReading {
+extension [NSItemProvider] {
+    func loadObjects<T>(ofType theType: T.Type, firstOnly _: Bool = false, using load: @escaping (T) -> Void) -> Bool where T: NSItemProviderReading {
         if let provider = first(where: { $0.canLoadObject(ofClass: theType) }) {
-            provider.loadObject(ofClass: theType) { object, error in
+            provider.loadObject(ofClass: theType) { object, _ in
                 if let value = object as? T {
                     DispatchQueue.main.async {
                         load(value)
@@ -232,9 +241,10 @@ extension Array where Element == NSItemProvider {
         }
         return false
     }
-    func loadObjects<T>(ofType theType: T.Type, firstOnly: Bool = false, using load: @escaping (T) -> Void) -> Bool where T: _ObjectiveCBridgeable, T._ObjectiveCType: NSItemProviderReading {
+
+    func loadObjects<T>(ofType theType: T.Type, firstOnly _: Bool = false, using load: @escaping (T) -> Void) -> Bool where T: _ObjectiveCBridgeable, T._ObjectiveCType: NSItemProviderReading {
         if let provider = first(where: { $0.canLoadObject(ofClass: theType) }) {
-            let _ = provider.loadObject(ofClass: theType) { object, error in
+            let _ = provider.loadObject(ofClass: theType) { object, _ in
                 if let value = object {
                     DispatchQueue.main.async {
                         load(value)
@@ -245,9 +255,11 @@ extension Array where Element == NSItemProvider {
         }
         return false
     }
+
     func loadFirstObject<T>(ofType theType: T.Type, using load: @escaping (T) -> Void) -> Bool where T: NSItemProviderReading {
         loadObjects(ofType: theType, firstOnly: true, using: load)
     }
+
     func loadFirstObject<T>(ofType theType: T.Type, using load: @escaping (T) -> Void) -> Bool where T: _ObjectiveCBridgeable, T._ObjectiveCType: NSItemProviderReading {
         loadObjects(ofType: theType, firstOnly: true, using: load)
     }

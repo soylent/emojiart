@@ -15,7 +15,7 @@ extension EmojiArtModel {
 
         var url: URL? {
             switch self {
-            case .url(let url):
+            case let .url(url):
                 return url
             default:
                 return nil
@@ -24,7 +24,7 @@ extension EmojiArtModel {
 
         var imageData: Data? {
             switch self {
-            case .imageData(let data):
+            case let .imageData(data):
                 return data
             default:
                 return nil

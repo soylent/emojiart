@@ -31,7 +31,7 @@ struct EmojiArtModel {
         }
     }
 
-    init() { }
+    init() {}
 
     mutating func addEmoji(_ text: String, at location: (x: Int, y: Int), size: Int) {
         uniqueEmojiId += 1

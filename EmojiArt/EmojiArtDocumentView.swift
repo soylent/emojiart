@@ -204,7 +204,7 @@ struct EmojiArtDocumentView: View {
         }
     }
 
-    private struct DrawingConstants {
+    private enum DrawingConstants {
         static let selectionColor: Color = .blue
     }
 }
