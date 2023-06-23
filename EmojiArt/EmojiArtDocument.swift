@@ -10,6 +10,7 @@ import SwiftUI
 class EmojiArtDocument: ObservableObject {
     @Published private(set) var emojiArt: EmojiArtModel {
         didSet {
+            autosave()
             if emojiArt.background != oldValue.background {
                 fetchBackgroundImageDataIfNecessary()
             }
@@ -25,11 +26,46 @@ class EmojiArtDocument: ObservableObject {
     }
 
     init() {
-        emojiArt = EmojiArtModel()
+        if let url = Autosave.url, let autosavedEmojiArt = try? EmojiArtModel(url: url) {
+            emojiArt = autosavedEmojiArt
+            fetchBackgroundImageDataIfNecessary()
+        } else {
+            emojiArt = EmojiArtModel()
+        }
     }
 
     var emojis: [EmojiArtModel.Emoji] { emojiArt.emojis }
     var background: EmojiArtModel.Background { emojiArt.background }
+
+    private func save(to url: URL) {
+        let thisfunction = "\(String(describing: self)).\(#function)"
+        do {
+            let data = try emojiArt.json()
+            print("\(thisfunction) json = \(String(data: data, encoding: .utf8) ?? "nil")")
+            try data.write(to: url)
+            print("\(thisfunction) success!")
+        } catch let encodingError where encodingError is EncodingError {
+            print("\(thisfunction) could not encode EmojiArt as JSON because \(encodingError.localizedDescription)")
+        }
+        catch {
+            print("\(thisfunction) error = \(error)")
+        }
+    }
+
+    private struct Autosave {
+        static private let filename = "Autosaved.emojiart"
+        static var url: URL? {
+            let documentDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+            return documentDirectory?.appendingPathComponent(filename)
+        }
+
+    }
+
+    private func autosave() {
+        if let url = Autosave.url {
+            save(to: url)
+        }
+    }
 
     private func fetchBackgroundImageDataIfNecessary() {
         backgroundImage = nil
