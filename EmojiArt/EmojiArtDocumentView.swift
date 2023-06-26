@@ -16,12 +16,11 @@ struct EmojiArtDocumentView: View {
     @GestureState private var gesturePanOffset: CGSize = .zero
     @GestureState private var gestureEmojiPanOffset: (emoji: EmojiArtModel.Emoji?, offset: CGSize) = (nil, .zero)
     private let defaultEmojiFontSize: CGFloat = 40
-    private let testEmojis = "🐢🐍🐃🐑🐎🐙🥓🌽🧈🥩🥒🌶🏈🎾🏐⚽️🚘🛻🚨🩼"
 
     var body: some View {
         VStack(spacing: 0) {
             documentBody
-            palette
+            PaletteChooser(emojiFontSize: defaultEmojiFontSize)
         }
     }
 
@@ -58,11 +57,6 @@ struct EmojiArtDocumentView: View {
             }
             .gesture(panGesture().simultaneously(with: zoomGesture()))
         }
-    }
-
-    var palette: some View {
-        ScrollingEmojiView(emojis: testEmojis)
-            .font(.system(size: defaultEmojiFontSize))
     }
 
     private func drop(providers: [NSItemProvider], at location: CGPoint, in geometry: GeometryProxy) -> Bool {
@@ -206,23 +200,6 @@ struct EmojiArtDocumentView: View {
 
     private enum DrawingConstants {
         static let selectionColor: Color = .blue
-    }
-}
-
-struct ScrollingEmojiView: View {
-    let emojis: String
-
-    var body: some View {
-        ScrollView(.horizontal) {
-            HStack {
-                ForEach(emojis.map { String($0) }, id: \.self) { emoji in
-                    Text(emoji)
-                        .onDrag {
-                            NSItemProvider(object: emoji as NSString)
-                        }
-                }
-            }
-        }
     }
 }
 
