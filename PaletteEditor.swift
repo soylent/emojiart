@@ -9,12 +9,34 @@ import SwiftUI
 
 struct PaletteEditor: View {
     @Binding var palette: Palette
+    @State private var emojisToAdd = ""
 
     var body: some View {
         Form {
-            TextField("Name", text: $palette.name)
+            nameSection
+            addEmojiSection
         }
         .frame(minWidth: 300, minHeight: 350)
+    }
+
+    private var nameSection: some View {
+        Section(header: Text("Name")) {
+            TextField("Name", text: $palette.name)
+        }
+    }
+
+    private var addEmojiSection: some View {
+        Section(header: Text("Add Emojis")) {
+            TextField("", text: $emojisToAdd)
+                .onChange(of: emojisToAdd) { emojis in
+                    withAnimation {
+                        palette.emojis = (emojis + palette.emojis)
+                            .filter { $0.isEmoji }
+                            .withNoRepeatedCharacters
+                    }
+
+                }
+        }
     }
 }
 
