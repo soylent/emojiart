@@ -36,14 +36,6 @@ extension EmojiArtModel {
             case imageData
         }
 
-        enum UrlCodingKeys: CodingKey {
-            case _0
-        }
-
-        enum ImageDataCodingKeys: CodingKey {
-            case _0
-        }
-
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             if let url = try? container.decode(URL.self, forKey: .url) {
@@ -58,9 +50,9 @@ extension EmojiArtModel {
         func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             switch self {
-            case .url(let url):
+            case let .url(url):
                 try container.encode(url, forKey: .url)
-            case .imageData(let imageData):
+            case let .imageData(imageData):
                 try container.encode(imageData, forKey: .imageData)
             case .blank:
                 break

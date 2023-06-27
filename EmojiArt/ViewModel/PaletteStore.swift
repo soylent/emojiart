@@ -36,7 +36,8 @@ class PaletteStore: ObservableObject {
 
     private func restoreFromUserDefaults() {
         if let jsonData = UserDefaults.standard.data(forKey: userDefaultsKey),
-           let decodedPalettes = try? JSONDecoder().decode([Palette].self, from: jsonData) {
+           let decodedPalettes = try? JSONDecoder().decode([Palette].self, from: jsonData)
+        {
             palettes = decodedPalettes
         }
     }
@@ -48,19 +49,22 @@ class PaletteStore: ObservableObject {
 
         if palettes.isEmpty {
             print("Loaded built-in palettes")
-            insertPalette(named: "Vehicles", emojis: "🚘🚖🚞🛻🚕")
-            insertPalette(named: "Sports", emojis: "⚾️🥎🎾🏉🏀🥏")
+            insertPalette(named: "Objects", emojis: "⏰🧭☎️🧲🎈🧽🔫")
+            insertPalette(named: "Vehicles", emojis: "🚕🚗🚕🚙🚌🚓🚑🚐🚒🚛🚚🚎")
+            insertPalette(named: "Sports", emojis: "🏀🏈⚽️⚾️🏉🎾🥎🎱🥏🪀")
+            insertPalette(named: "Food", emojis: "🍎🍊🍏🍐🍌🍋🥭🍓🫐🍅🍆🥥")
+            insertPalette(named: "Animals", emojis: "🐹🐻🦊🐯🦁🐷🐮🐵🐼🐨🐻‍❄️")
         } else {
             print("Loaded palettes from UserDefaults: \(palettes)")
         }
     }
 
-    // MARK: - Intent
-
     func palette(at index: Int) -> Palette {
         let safeIndex = min(max(index, 0), palettes.count - 1)
         return palettes[safeIndex]
     }
+
+    // MARK: - Intents
 
     @discardableResult
     func removePalette(at index: Int) -> Int {

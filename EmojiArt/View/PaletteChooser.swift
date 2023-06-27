@@ -87,7 +87,6 @@ struct PaletteChooser: View {
 
     private var rollTransition: AnyTransition {
         .asymmetric(insertion: .offset(x: 0, y: emojiFontSize), removal: .offset(x: 0, y: -emojiFontSize))
-
     }
 }
 

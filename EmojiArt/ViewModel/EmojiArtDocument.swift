@@ -47,20 +47,18 @@ class EmojiArtDocument: ObservableObject {
             print("\(thisfunction) success!")
         } catch let encodingError where encodingError is EncodingError {
             print("\(thisfunction) could not encode EmojiArt as JSON because \(encodingError.localizedDescription)")
-        }
-        catch {
+        } catch {
             print("\(thisfunction) error = \(error)")
         }
     }
 
-    private struct Autosave {
-        static private let filename = "Autosaved.emojiart"
+    private enum Autosave {
+        private static let filename = "Autosaved.emojiart"
         static let coalescingInterval = 5.0
         static var url: URL? {
             let documentDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
             return documentDirectory?.appendingPathComponent(filename)
         }
-
     }
 
     private func autosave() {
@@ -82,24 +80,29 @@ class EmojiArtDocument: ObservableObject {
         backgroundImage = nil
         switch background {
         case let .url(url):
-            backgroundImageFetchStatus = .fetching
-            DispatchQueue.global(qos: .userInitiated).async {
-                if let data = try? Data(contentsOf: url) {
-                    DispatchQueue.main.async { [weak self] in
-                        if self?.background == EmojiArtModel.Background.url(url) {
-                            self?.backgroundImageFetchStatus = .idle
-                            self?.backgroundImage = UIImage(data: data)
-                            if self?.backgroundImage == nil {
-                                self?.backgroundImageFetchStatus = .failed(url)
-                            }
-                        }
-                    }
-                }
-            }
+            fetchBackgroundImageData(from: url)
         case let .imageData(data):
             backgroundImage = UIImage(data: data)
         case .blank:
             break
+        }
+    }
+
+    private func fetchBackgroundImageData(from url: URL) {
+        backgroundImageFetchStatus = .fetching
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard let data = try? Data(contentsOf: url) else { return }
+
+            DispatchQueue.main.async { [weak self] in
+                guard self?.background == EmojiArtModel.Background.url(url) else { return }
+
+                self?.backgroundImageFetchStatus = .idle
+                self?.backgroundImage = UIImage(data: data)
+                if self?.backgroundImage == nil {
+                    self?.backgroundImageFetchStatus = .failed(url)
+                }
+            }
         }
     }
 

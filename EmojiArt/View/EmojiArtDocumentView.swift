@@ -65,7 +65,7 @@ struct EmojiArtDocumentView: View {
             }
             .onChange(of: document.backgroundImageFetchStatus) { status in
                 switch status {
-                case .failed(let url):
+                case let .failed(url):
                     showBackgroundImageFetchFailedAlert(url)
                 default:
                     break
@@ -231,5 +231,6 @@ struct EmojiArtDocumentView: View {
 struct EmojiArtDocumentView_Previews: PreviewProvider {
     static var previews: some View {
         EmojiArtDocumentView(document: EmojiArtDocument())
+            .environmentObject(PaletteStore(name: "Preview"))
     }
 }

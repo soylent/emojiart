@@ -24,7 +24,6 @@ struct PaletteManager: View {
                     } label: {
                         VStack(alignment: .leading) {
                             Text(palette.name)
-                            Text(palette.emojis)
                         }
                     }
                 }
