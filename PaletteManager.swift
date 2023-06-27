@@ -10,20 +10,34 @@ import SwiftUI
 struct PaletteManager: View {
     @EnvironmentObject var store: PaletteStore
 
+    @State private var editMode: EditMode = .inactive
+
     var body: some View {
-        NavigationStack {
-            List(store.palettes) { palette in
-                NavigationLink {
-                    PaletteEditor(palette: $store.palettes[palette])
-                } label: {
-                    VStack(alignment: .leading) {
-                        Text(palette.name)
-                        Text(palette.emojis)
+        NavigationView {
+            List {
+                ForEach(store.palettes) { palette in
+                    NavigationLink {
+                        PaletteEditor(palette: $store.palettes[palette])
+                    } label: {
+                        VStack(alignment: .leading) {
+                            Text(palette.name)
+                            Text(palette.emojis)
+                        }
                     }
+                }
+                .onDelete { indexSet in
+                    store.palettes.remove(atOffsets: indexSet)
+                }
+                .onMove { indexSet, newOffset in
+                    store.palettes.move(fromOffsets: indexSet, toOffset: newOffset)
                 }
             }
             .navigationTitle("Manage Palettes")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                EditButton()
+            }
+            .environment(\.editMode, $editMode)
         }
     }
 }
