@@ -9,12 +9,16 @@ import SwiftUI
 
 struct EmojiArtDocumentView: View {
     @ObservedObject var document: EmojiArtDocument
+
     @State private var selectedEmojis: Set<EmojiArtModel.Emoji> = []
     @State private var steadyStateZoomScale: CGFloat = 1
     @State private var steadyStatePanOffset: CGSize = .zero
+    @State private var alertToShow: IdentifiableAlert?
+
     @GestureState private var gestureZoomScale: CGFloat = 1
     @GestureState private var gesturePanOffset: CGSize = .zero
     @GestureState private var gestureEmojiPanOffset: (emoji: EmojiArtModel.Emoji?, offset: CGSize) = (nil, .zero)
+
     private let defaultEmojiFontSize: CGFloat = 40
 
     var body: some View {
@@ -56,6 +60,27 @@ struct EmojiArtDocumentView: View {
                 drop(providers: providers, at: location, in: geometry)
             }
             .gesture(panGesture().simultaneously(with: zoomGesture()))
+            .alert(item: $alertToShow) { alertToShow in
+                alertToShow.alert()
+            }
+            .onChange(of: document.backgroundImageFetchStatus) { status in
+                switch status {
+                case .failed(let url):
+                    showBackgroundImageFetchFailedAlert(url)
+                default:
+                    break
+                }
+            }
+        }
+    }
+
+    private func showBackgroundImageFetchFailedAlert(_ url: URL) {
+        alertToShow = IdentifiableAlert(id: "fetch failed: " + url.absoluteString) {
+            Alert(
+                title: Text("Background Image Fetch"),
+                message: Text("Couldn't load image from \(url)"),
+                dismissButton: .default(Text("OK"))
+            )
         }
     }
 
