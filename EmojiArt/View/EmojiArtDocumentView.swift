@@ -19,40 +19,25 @@ struct EmojiArtDocumentView: View {
     @GestureState private var gesturePanOffset: CGSize = .zero
     @GestureState private var gestureEmojiPanOffset: (emoji: EmojiArtModel.Emoji?, offset: CGSize) = (nil, .zero)
 
-    private let defaultEmojiFontSize: CGFloat = 40
+    private let defaultEmojiFontSize: CGFloat = 38
 
     var body: some View {
         VStack(spacing: 0) {
             documentBody
             PaletteChooser(emojiFontSize: defaultEmojiFontSize)
+                .padding(.horizontal)
         }
     }
 
     var documentBody: some View {
         GeometryReader { geometry in
             ZStack {
-                Color.white.overlay(
-                    OptionalImage(uiImage: document.backgroundImage)
-                        .scaleEffect(zoomScale)
-                        .position(convertFromEmojiCoordinates((0, 0), in: geometry))
-                )
-                .gesture(doubleTapToZoom(in: geometry.size).exclusively(before: singleTapToDeselect()))
+                drawBackground(in: geometry)
 
                 if document.backgroundImageFetchStatus == .fetching {
                     ProgressView()
                 } else {
-                    ForEach(document.emojis) { emoji in
-                        Text(emoji.text)
-                            .border(isSelected(emoji) ? DrawingConstants.selectionColor : .clear)
-                            .font(.system(size: fontSize(for: emoji)))
-                            .scaleEffect(zoomScale(for: emoji))
-                            .position(position(for: emoji, in: geometry))
-                            .gesture(
-                                dragEmojiGesture(emoji)
-                                    .simultaneously(with: singleTapToSelect(emoji))
-                                    .simultaneously(with: removeEmojiGesture(emoji))
-                            )
-                    }
+                    drawEmojis(in: geometry)
                 }
             }
             .clipped()
@@ -72,6 +57,32 @@ struct EmojiArtDocumentView: View {
                 }
             }
         }
+    }
+
+    private func drawBackground(in geometry: GeometryProxy) -> some View {
+        Color.white.overlay(
+            OptionalImage(uiImage: document.backgroundImage)
+                .scaleEffect(zoomScale)
+                .position(convertFromEmojiCoordinates((0, 0), in: geometry))
+        )
+        .gesture(doubleTapToZoom(in: geometry.size).exclusively(before: singleTapToDeselect()))
+
+    }
+
+    private func drawEmojis(in geometry: GeometryProxy) -> some View {
+        ForEach(document.emojis) { emoji in
+            Text(emoji.text)
+                .border(isSelected(emoji) ? DrawingConstants.selectionColor : .clear)
+                .font(.system(size: fontSize(for: emoji)))
+                .scaleEffect(zoomScale(for: emoji))
+                .position(position(for: emoji, in: geometry))
+                .gesture(
+                    dragEmojiGesture(emoji)
+                        .simultaneously(with: singleTapToSelect(emoji))
+                        .simultaneously(with: removeEmojiGesture(emoji))
+                )
+        }
+
     }
 
     private func showBackgroundImageFetchFailedAlert(_ url: URL) {

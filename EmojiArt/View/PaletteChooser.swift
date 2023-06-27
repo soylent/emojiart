@@ -39,17 +39,17 @@ struct PaletteChooser: View {
 
     @ViewBuilder
     private var contextMenu: some View {
-        AnimatedActionButton(title: "Edit", systemImage: "pencil") {
+        AnimatedActionButton(title: "Edit", systemImage: "square.and.pencil") {
             paletteToEdit = store.palette(at: chosenPaletteIndex)
         }
         AnimatedActionButton(title: "New", systemImage: "plus") {
             store.insertPalette(named: "New", emojis: "", at: chosenPaletteIndex)
             paletteToEdit = store.palette(at: chosenPaletteIndex)
         }
-        AnimatedActionButton(title: "Delete", systemImage: "minus.circle") {
+        AnimatedActionButton(title: "Delete", systemImage: "trash") {
             chosenPaletteIndex = store.removePalette(at: chosenPaletteIndex)
         }
-        AnimatedActionButton(title: "Manager", systemImage: "slider.vertical.3") {
+        AnimatedActionButton(title: "Manager", systemImage: "slider.horizontal.3") {
             managing = true
         }
         gotoMenu
@@ -65,13 +65,12 @@ struct PaletteChooser: View {
                 }
             }
         } label: {
-            Label("Go To", systemImage: "text.insert")
+            Label("Go To", systemImage: "arrow.triangle.swap")
         }
     }
 
     private func body(for palette: Palette) -> some View {
         HStack {
-            Text(palette.name)
             ScrollingEmojiView(emojis: palette.emojis)
                 .font(emojiFont)
         }
@@ -95,7 +94,7 @@ struct ScrollingEmojiView: View {
 
     var body: some View {
         ScrollView(.horizontal) {
-            HStack {
+            HStack(spacing: 0) {
                 ForEach(emojis.withNoRepeatedCharacters.map { String($0) }, id: \.self) { emoji in
                     Text(emoji)
                         .onDrag {

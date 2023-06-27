@@ -22,9 +22,7 @@ struct PaletteManager: View {
                     NavigationLink {
                         PaletteEditor(palette: $store.palettes[palette])
                     } label: {
-                        VStack(alignment: .leading) {
-                            Text(palette.name)
-                        }
+                        Text(palette.name)
                     }
                 }
                 .onDelete { indexSet in

@@ -79,6 +79,15 @@
 			path = ViewModel;
 			sourceTree = "<group>";
 		};
+		CE7E99782A4AC2E000A8320D /* Utility */ = {
+			isa = PBXGroup;
+			children = (
+				CE87FD282A393F64001B6CAC /* UtilityExtensions.swift */,
+				CE87FD272A393F64001B6CAC /* UtilityViews.swift */,
+			);
+			path = Utility;
+			sourceTree = "<group>";
+		};
 		CE87FD072A393407001B6CAC = {
 			isa = PBXGroup;
 			children = (
@@ -98,12 +107,11 @@
 		CE87FD122A393407001B6CAC /* EmojiArt */ = {
 			isa = PBXGroup;
 			children = (
+				CE7E99782A4AC2E000A8320D /* Utility */,
 				CE7E99772A4AAD9000A8320D /* ViewModel */,
 				CE7E99762A4AAD8A00A8320D /* View */,
 				CE7E99752A4AAD7F00A8320D /* Model */,
 				CE87FD132A393407001B6CAC /* EmojiArtApp.swift */,
-				CE87FD282A393F64001B6CAC /* UtilityExtensions.swift */,
-				CE87FD272A393F64001B6CAC /* UtilityViews.swift */,
 				CE87FD172A393409001B6CAC /* Assets.xcassets */,
 				CE87FD192A393409001B6CAC /* Preview Content */,
 			);
