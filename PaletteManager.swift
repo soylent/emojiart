@@ -8,7 +8,10 @@
 import SwiftUI
 
 struct PaletteManager: View {
-    @EnvironmentObject var store: PaletteStore
+    @EnvironmentObject private var store: PaletteStore
+
+    @Environment(\.isPresented) private var isPresented
+    @Environment(\.dismiss) private var dismiss
 
     @State private var editMode: EditMode = .inactive
 
@@ -35,7 +38,12 @@ struct PaletteManager: View {
             .navigationTitle("Manage Palettes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                EditButton()
+                ToolbarItem { EditButton() }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if isPresented, UIDevice.current.userInterfaceIdiom != .pad {
+                        Button("Close") { dismiss() }
+                    }
+                }
             }
             .environment(\.editMode, $editMode)
         }
