@@ -16,6 +16,8 @@ struct PaletteManager: View {
     @State private var editMode: EditMode = .inactive
 
     var body: some View {
+        // NOTE: Due to a bug in SwiftUI, animations are not working in NavigationStack.
+        // https://developer.apple.com/forums/thread/728132
         NavigationView {
             List {
                 ForEach(store.palettes) { palette in
