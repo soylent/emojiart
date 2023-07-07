@@ -2,7 +2,7 @@
 //  EmojiArtDocument.swift
 //  EmojiArt
 //
-//  Created by user on 6/13/23.
+//  Created by soylent on 6/13/23.
 //
 
 import SwiftUI

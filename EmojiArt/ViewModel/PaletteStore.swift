@@ -2,7 +2,7 @@
 //  PaletteStore.swift
 //  EmojiArt
 //
-//  Created by user on 6/23/23.
+//  Created by soylent on 6/23/23.
 //
 
 import SwiftUI
