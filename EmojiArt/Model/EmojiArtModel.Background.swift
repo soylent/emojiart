@@ -8,11 +8,13 @@
 import Foundation
 
 extension EmojiArtModel {
+    /// The background model.
     enum Background: Equatable, Codable {
         case blank
         case url(URL)
         case imageData(Data)
 
+        /// The background image URL.
         var url: URL? {
             switch self {
             case let .url(url):
@@ -22,6 +24,7 @@ extension EmojiArtModel {
             }
         }
 
+        /// The background image data.
         var imageData: Data? {
             switch self {
             case let .imageData(data):
@@ -31,11 +34,13 @@ extension EmojiArtModel {
             }
         }
 
+        /// Coding settings.
         enum CodingKeys: String, CodingKey {
             case url = "theURL"
             case imageData
         }
 
+        /// Creates a new instance by deserializing it using the given `decoder`.
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             if let url = try? container.decode(URL.self, forKey: .url) {
@@ -47,6 +52,7 @@ extension EmojiArtModel {
             }
         }
 
+        /// Encodes itself using the given `encoder`.
         func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             switch self {

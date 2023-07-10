@@ -7,11 +7,18 @@
 
 import SwiftUI
 
+/// Emoji palette.
 struct Palette: Identifiable, Codable, Hashable {
+    /// The name of the palette.
     var name: String
+
+    /// The emojis comprising the palette.
     var emojis: String
+
+    /// The palette id.
     var id: Int
 
+    /// Creates a new palette with the given parameters.
     fileprivate init(name: String, emojis: String, id: Int) {
         self.name = name
         self.emojis = emojis
@@ -19,9 +26,11 @@ struct Palette: Identifiable, Codable, Hashable {
     }
 }
 
+/// A collection of palettes.
 class PaletteStore: ObservableObject {
     let name: String
 
+    /// The palettes comprising the collection.
     @Published var palettes = [Palette]() {
         didSet {
             storeInUserDefaults()
@@ -30,10 +39,12 @@ class PaletteStore: ObservableObject {
 
     private var userDefaultsKey: String { "PaletteStore:" + name }
 
+    /// Saves the palettes to `UserDefaults`.
     private func storeInUserDefaults() {
         UserDefaults.standard.set(try? JSONEncoder().encode(palettes), forKey: userDefaultsKey)
     }
 
+    /// Restores the paletess from `UserDefaults`.
     private func restoreFromUserDefaults() {
         if let jsonData = UserDefaults.standard.data(forKey: userDefaultsKey),
            let decodedPalettes = try? JSONDecoder().decode([Palette].self, from: jsonData)
@@ -42,6 +53,7 @@ class PaletteStore: ObservableObject {
         }
     }
 
+    /// Creates a pre-defined palette collection or loads the previously saved version if available.
     init(name: String) {
         self.name = name
 
@@ -59,6 +71,7 @@ class PaletteStore: ObservableObject {
         }
     }
 
+    /// Returns the palette at the given `index`.
     func palette(at index: Int) -> Palette {
         let safeIndex = min(max(index, 0), palettes.count - 1)
         return palettes[safeIndex]
@@ -66,6 +79,7 @@ class PaletteStore: ObservableObject {
 
     // MARK: - Intents
 
+    /// Removes the palette at the given `index`.
     @discardableResult
     func removePalette(at index: Int) -> Int {
         if palettes.count > 1, palettes.indices.contains(index) {
@@ -74,6 +88,7 @@ class PaletteStore: ObservableObject {
         return index % palettes.count
     }
 
+    /// Adds a palette with the specified parameters at the given `index`.
     func insertPalette(named name: String, emojis: String? = nil, at index: Int = 0) {
         let unique = (palettes.max(by: { $0.id < $1.id })?.id ?? 0) + 1
         let palette = Palette(name: name, emojis: emojis ?? "", id: unique)

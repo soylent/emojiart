@@ -7,20 +7,36 @@
 
 import SwiftUI
 
+/// The main document view.
 struct EmojiArtDocumentView: View {
+    /// A reference to the document view model.
     @ObservedObject var document: EmojiArtDocument
 
+    /// A set of the currently selected emojis.
     @State private var selectedEmojis: Set<EmojiArtModel.Emoji> = []
+
+    /// The overall zoom scale.
     @State private var steadyStateZoomScale: CGFloat = 1
+
+    /// The overall pan offset.
     @State private var steadyStatePanOffset: CGSize = .zero
+
+    /// Whether to show the specified alert.
     @State private var alertToShow: IdentifiableAlert?
 
+    /// Additional zoom scale while pinching.
     @GestureState private var gestureZoomScale: CGFloat = 1
+
+    /// Additional pan offset while dragging.
     @GestureState private var gesturePanOffset: CGSize = .zero
+
+    /// Additional pan offset while draggin an emoji.
     @GestureState private var gestureEmojiPanOffset: (emoji: EmojiArtModel.Emoji?, offset: CGSize) = (nil, .zero)
 
+    /// The default emoji font size.
     private let defaultEmojiFontSize: CGFloat = 38
 
+    /// The view body.
     var body: some View {
         VStack(spacing: 0) {
             documentBody
@@ -29,6 +45,7 @@ struct EmojiArtDocumentView: View {
         }
     }
 
+    /// The document view.
     var documentBody: some View {
         GeometryReader { geometry in
             ZStack {
@@ -62,6 +79,7 @@ struct EmojiArtDocumentView: View {
         }
     }
 
+    /// Returns the document background that fits within the given `geometry`.
     private func drawBackground(in geometry: GeometryProxy) -> some View {
         Color.white.overlay(
             OptionalImage(uiImage: document.backgroundImage)
@@ -72,6 +90,8 @@ struct EmojiArtDocumentView: View {
 
     }
 
+
+    /// Returns the document emojis positioned withing the given `geometry`.
     private func drawEmojis(in geometry: GeometryProxy) -> some View {
         ForEach(document.emojis) { emoji in
             Text(emoji.text)
@@ -88,6 +108,7 @@ struct EmojiArtDocumentView: View {
 
     }
 
+    /// Shows an alert in case of a background image fetch failure.
     private func showBackgroundImageFetchFailedAlert(_ url: URL) {
         alertToShow = IdentifiableAlert(id: "fetch failed: " + url.absoluteString) {
             Alert(
@@ -98,6 +119,7 @@ struct EmojiArtDocumentView: View {
         }
     }
 
+    /// Handles drag & drop for images and emojis.
     private func drop(providers: [NSItemProvider], at location: CGPoint, in geometry: GeometryProxy) -> Bool {
         var found = providers.loadFirstObject(ofType: URL.self) { url in
             document.setBackground(.url(url.imageURL))
@@ -123,29 +145,36 @@ struct EmojiArtDocumentView: View {
         return found
     }
 
+    /// The effective zoom scale.
     private var zoomScale: CGFloat {
         selectedEmojis.isEmpty ? steadyStateZoomScale * gestureZoomScale : steadyStateZoomScale
     }
 
+    /// The effective pan offset.
     private var panOffset: CGSize { steadyStatePanOffset + gesturePanOffset }
 
+    /// Returns the font size for the given `emoji`.
     private func fontSize(for emoji: EmojiArtModel.Emoji) -> CGFloat {
         CGFloat(emoji.size)
     }
 
+    /// Returns the position for the given emoji within the specified `geometry`.
     private func position(for emoji: EmojiArtModel.Emoji, in geometry: GeometryProxy) -> CGPoint {
         let offset = isSelected(emoji) || (selectedEmojis.isEmpty && gestureEmojiPanOffset.emoji == emoji) ? gestureEmojiPanOffset.offset : .zero
         return convertFromEmojiCoordinates((emoji.x, emoji.y), in: geometry) + offset * zoomScale
     }
 
+    /// Returns the effective zoom scale for the given emoji.
     private func zoomScale(for emoji: EmojiArtModel.Emoji) -> CGFloat {
         isSelected(emoji) || selectedEmojis.isEmpty ? steadyStateZoomScale * gestureZoomScale : steadyStateZoomScale
     }
 
+    /// Returns whether the given `emoji` is currently selected.
     private func isSelected(_ emoji: EmojiArtModel.Emoji) -> Bool {
         selectedEmojis.index(matching: emoji) != nil
     }
 
+    /// Converts the given center offset `location` to actual screen location.
     private func convertFromEmojiCoordinates(_ location: (x: Int, y: Int), in geometry: GeometryProxy) -> CGPoint {
         let center = geometry.frame(in: .local).center
         return CGPoint(
@@ -154,6 +183,7 @@ struct EmojiArtDocumentView: View {
         )
     }
 
+    /// Converts the given screen `location` to its center offset counterpart.
     private func convertToEmojiCoordinates(at location: CGPoint, in geometry: GeometryProxy) -> (x: Int, y: Int) {
         let center = geometry.frame(in: .local).center
         let x = (location.x - panOffset.width - center.x) / zoomScale
@@ -161,6 +191,7 @@ struct EmojiArtDocumentView: View {
         return (x: Int(x), y: Int(y))
     }
 
+    /// Returns a gesture to fit the background within the given `size` on double tap.
     private func doubleTapToZoom(in size: CGSize) -> some Gesture {
         TapGesture(count: 2)
             .onEnded {
@@ -170,12 +201,14 @@ struct EmojiArtDocumentView: View {
             }
     }
 
+    /// Returns a gesture to remove the currently selected emojis on single tap.
     private func singleTapToDeselect() -> some Gesture {
         TapGesture().onEnded {
             selectedEmojis.removeAll()
         }
     }
 
+    /// Changes the overall zoom to fit the given `image` within the `size`.
     private func zoomToFit(_ image: UIImage?, in size: CGSize) {
         if let image, image.size.width > 0, image.size.height > 0, size.width > 0, size.height > 0 {
             let hZoom = size.width / image.size.width
@@ -185,6 +218,7 @@ struct EmojiArtDocumentView: View {
         }
     }
 
+    /// Returns a gesture to scale the document while pinching.
     private func zoomGesture() -> some Gesture {
         MagnificationGesture()
             .updating($gestureZoomScale) { latestGestureZoomScale, gestureZoomScale, _ in
@@ -201,6 +235,7 @@ struct EmojiArtDocumentView: View {
             }
     }
 
+    /// Returns a gesture to pan the document while dragging.
     private func panGesture() -> some Gesture {
         DragGesture()
             .updating($gesturePanOffset) { latestDragGestureValue, gesturePanOffset, _ in
@@ -211,12 +246,14 @@ struct EmojiArtDocumentView: View {
             }
     }
 
+    /// Returns a gesture to select or unselect the given `emoji` on single tap.
     private func singleTapToSelect(_ emoji: EmojiArtModel.Emoji) -> some Gesture {
         TapGesture().onEnded {
             selectedEmojis.toggleMembership(of: emoji)
         }
     }
 
+    /// Returns a gesture to move the given `emoji` while dragging.
     private func dragEmojiGesture(_ emoji: EmojiArtModel.Emoji) -> some Gesture {
         DragGesture()
             .updating($gestureEmojiPanOffset) { latestDragGestureValue, gestureEmojiPanOffset, _ in
@@ -230,6 +267,7 @@ struct EmojiArtDocumentView: View {
             }
     }
 
+    /// Returns a gesture to remove the given `emoji` on a long press.
     private func removeEmojiGesture(_ emoji: EmojiArtModel.Emoji) -> some Gesture {
         LongPressGesture().onEnded { _ in
             document.removeEmoji(emoji)
@@ -237,6 +275,7 @@ struct EmojiArtDocumentView: View {
         }
     }
 
+    /// Constants related to the view appearance.
     private enum DrawingConstants {
         static let selectionColor: Color = .blue
     }

@@ -8,7 +8,9 @@
 import SwiftUI
 import Combine
 
+/// A view model for a document.
 class EmojiArtDocument: ObservableObject {
+    /// The underlying document model.
     @Published private(set) var emojiArt: EmojiArtModel {
         didSet {
             scheduleAutosave()
@@ -18,7 +20,10 @@ class EmojiArtDocument: ObservableObject {
         }
     }
 
+    /// The background image.
     @Published var backgroundImage: UIImage?
+
+    /// The current fetch status for the background image.
     @Published var backgroundImageFetchStatus = BackgroundImageFetchStatus.idle
 
     enum BackgroundImageFetchStatus: Equatable {
@@ -27,6 +32,7 @@ class EmojiArtDocument: ObservableObject {
         case failed(URL)
     }
 
+    /// Creates an empy document or autoloads the previously saved version if available.
     init() {
         if let url = Autosave.url, let autosavedEmojiArt = try? EmojiArtModel(url: url) {
             emojiArt = autosavedEmojiArt
@@ -36,9 +42,13 @@ class EmojiArtDocument: ObservableObject {
         }
     }
 
+    /// The emojis comprising the document.
     var emojis: [EmojiArtModel.Emoji] { emojiArt.emojis }
+
+    /// The background of the document.
     var background: EmojiArtModel.Background { emojiArt.background }
 
+    /// Saves the document to the given `url`.
     private func save(to url: URL) {
         let thisfunction = "\(String(describing: self)).\(#function)"
         do {
@@ -53,6 +63,7 @@ class EmojiArtDocument: ObservableObject {
         }
     }
 
+    /// Autosave settings.
     private enum Autosave {
         private static let filename = "Autosaved.emojiart"
         static let coalescingInterval = 5.0
@@ -62,6 +73,7 @@ class EmojiArtDocument: ObservableObject {
         }
     }
 
+    /// Saves the document to a predefined location.
     private func autosave() {
         if let url = Autosave.url {
             save(to: url)
@@ -70,6 +82,7 @@ class EmojiArtDocument: ObservableObject {
 
     private var autosaveTimer: Timer?
 
+    /// Schedules a new autosave cancelling any existing autosaves.
     private func scheduleAutosave() {
         autosaveTimer?.invalidate()
         autosaveTimer = Timer.scheduledTimer(withTimeInterval: Autosave.coalescingInterval, repeats: false) { _ in
@@ -77,6 +90,7 @@ class EmojiArtDocument: ObservableObject {
         }
     }
 
+    /// Sets the `backgrounImage` property based on the `background` setting.
     private func fetchBackgroundImageDataIfNecessary() {
         backgroundImage = nil
         switch background {
@@ -91,6 +105,7 @@ class EmojiArtDocument: ObservableObject {
 
     private var backgroundImagefetchCancellable: AnyCancellable?
 
+    /// Loads the background image data from the given `url`.
     private func fetchBackgroundImageData(from url: URL) {
         backgroundImageFetchStatus = .fetching
         backgroundImagefetchCancellable?.cancel()
@@ -107,14 +122,17 @@ class EmojiArtDocument: ObservableObject {
 
     // MARK: - Intents
 
+    /// Sets the background to the given value.
     func setBackground(_ background: EmojiArtModel.Background) {
         emojiArt.background = background
     }
 
+    /// Adds an emoji of the given `size` at the specified `location`.
     func addEmoji(_ text: String, at location: (x: Int, y: Int), size: CGFloat) {
         emojiArt.addEmoji(text, at: location, size: Int(size))
     }
 
+    /// Moves the `emoji` by the given `offset`.
     func moveEmoji(_ emoji: EmojiArtModel.Emoji, by offset: CGSize) {
         if let index = emojiArt.emojis.index(matching: emoji) {
             emojiArt.emojis[index].x += Int(offset.width)
@@ -122,12 +140,14 @@ class EmojiArtDocument: ObservableObject {
         }
     }
 
+    /// Scales the `emoji` by the given `scale`
     func scaleEmoji(_ emoji: EmojiArtModel.Emoji, by scale: CGFloat) {
         if let index = emojiArt.emojis.index(matching: emoji) {
             emojiArt.emojis[index].size = Int((CGFloat(emojiArt.emojis[index].size) * scale).rounded(.toNearestOrAwayFromZero))
         }
     }
 
+    /// Removes the given `emoji` from the document.
     func removeEmoji(_ emoji: EmojiArtModel.Emoji) {
         emojiArt.emojis.remove(emoji)
     }

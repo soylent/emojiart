@@ -7,16 +7,27 @@
 
 import SwiftUI
 
+/// Palette selection menu.
 struct PaletteChooser: View {
+    /// The emoji size.
     var emojiFontSize: CGFloat = 40
+
+    /// The emoji font.
     var emojiFont: Font { .system(size: emojiFontSize) }
 
+    /// A reference to the palette store view model.
     @EnvironmentObject var store: PaletteStore
 
+    /// The index of the currently selected palette.
     @State private var chosenPaletteIndex = 0
+
+    /// Whether to show the editor for the specified palette.
     @State private var paletteToEdit: Palette?
+
+    /// Whether to show the palette manager.
     @State private var managing = false
 
+    /// The view body.
     var body: some View {
         HStack {
             paletteControlButton
@@ -25,6 +36,7 @@ struct PaletteChooser: View {
         .clipped()
     }
 
+    /// The button to select the next palette.
     private var paletteControlButton: some View {
         Button {
             withAnimation {
@@ -37,6 +49,7 @@ struct PaletteChooser: View {
         .contextMenu { contextMenu }
     }
 
+    /// The context menu for the paletee control button.
     @ViewBuilder
     private var contextMenu: some View {
         AnimatedActionButton(title: "Edit", systemImage: "square.and.pencil") {
@@ -55,6 +68,7 @@ struct PaletteChooser: View {
         gotoMenu
     }
 
+    /// Palette switching menu.
     private var gotoMenu: some View {
         Menu {
             ForEach(store.palettes) { palette in
@@ -69,6 +83,7 @@ struct PaletteChooser: View {
         }
     }
 
+    /// Returns a view representing the given `palette`.
     private func body(for palette: Palette) -> some View {
         HStack {
             ScrollingEmojiView(emojis: palette.emojis)
@@ -89,6 +104,7 @@ struct PaletteChooser: View {
     }
 }
 
+/// A horizontally scrolling row of emojis.
 struct ScrollingEmojiView: View {
     let emojis: String
 

@@ -7,10 +7,15 @@
 
 import SwiftUI
 
+/// Palette editor form.
 struct PaletteEditor: View {
+    /// The palette being edited.
     @Binding var palette: Palette
+
+    /// Emojis to add to the palette.
     @State private var emojisToAdd = ""
 
+    /// The view body.
     var body: some View {
         Form {
             nameSection
@@ -21,12 +26,14 @@ struct PaletteEditor: View {
         .navigationTitle("Edit \(palette.name)")
     }
 
+    /// The palette name field.
     private var nameSection: some View {
         Section(header: Text("Name")) {
             TextField("Name", text: $palette.name)
         }
     }
 
+    /// A field for adding emojis to the palette.
     private var addEmojiSection: some View {
         Section(header: Text("Add Emojis")) {
             TextField("", text: $emojisToAdd)
@@ -40,6 +47,7 @@ struct PaletteEditor: View {
         }
     }
 
+    /// An emoji grid for removing emojis from the palette.
     private var removeEmojiSection: some View {
         Section(header: Text("Remove Emoji")) {
             let emojis = palette.emojis.withNoRepeatedCharacters.map { String($0) }
