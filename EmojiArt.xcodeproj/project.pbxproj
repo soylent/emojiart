@@ -62,10 +62,10 @@
 		CE7E99762A4AAD8A00A8320D /* View */ = {
 			isa = PBXGroup;
 			children = (
+				CE87FD152A393407001B6CAC /* EmojiArtDocumentView.swift */,
 				CE7E99732A4A7B1400A8320D /* PaletteManager.swift */,
 				CE7E99712A494D6900A8320D /* PaletteEditor.swift */,
 				CE7E996F2A49152D00A8320D /* PaletteChooser.swift */,
-				CE87FD152A393407001B6CAC /* EmojiArtDocumentView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";

@@ -15,14 +15,19 @@ struct EmojiArtDocumentView: View {
     /// A set of the currently selected emojis.
     @State private var selectedEmojis: Set<EmojiArtModel.Emoji> = []
 
-    /// The overall zoom scale.
-    @State private var steadyStateZoomScale: CGFloat = 1
-
-    /// The overall pan offset.
-    @State private var steadyStatePanOffset: CGSize = .zero
-
     /// Whether to show the specified alert.
     @State private var alertToShow: IdentifiableAlert?
+
+    /// Whether to autoscale the background image.
+    @State var autozoom = false
+
+    /// The overall zoom scale.
+    @SceneStorage("EmojiArtDocumentView.steadyStateZoomScale")
+    private var steadyStateZoomScale: CGFloat = 1
+
+    /// The overall pan offset.
+    @SceneStorage("EmojiArtDocumentView.steadyStatePanOffset")
+    private var steadyStatePanOffset: CGSize = .zero
 
     /// Additional zoom scale while pinching.
     @GestureState private var gestureZoomScale: CGFloat = 1
@@ -74,7 +79,9 @@ struct EmojiArtDocumentView: View {
                 }
             }
             .onReceive(document.$backgroundImage) { image in
-                zoomToFit(image, in: geometry.size)
+                if autozoom {
+                    zoomToFit(image, in: geometry.size)
+                }
             }
         }
     }
@@ -122,11 +129,13 @@ struct EmojiArtDocumentView: View {
     /// Handles drag & drop for images and emojis.
     private func drop(providers: [NSItemProvider], at location: CGPoint, in geometry: GeometryProxy) -> Bool {
         var found = providers.loadFirstObject(ofType: URL.self) { url in
+            autozoom = true
             document.setBackground(.url(url.imageURL))
         }
         if !found {
             found = providers.loadFirstObject(ofType: UIImage.self) { image in
                 if let data = image.jpegData(compressionQuality: 1.0) {
+                    autozoom = true
                     document.setBackground(.imageData(data))
                 }
             }

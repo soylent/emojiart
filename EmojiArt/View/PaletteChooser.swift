@@ -19,7 +19,8 @@ struct PaletteChooser: View {
     @EnvironmentObject var store: PaletteStore
 
     /// The index of the currently selected palette.
-    @State private var chosenPaletteIndex = 0
+    @SceneStorage("PaletteChooser.chosedPaletteIndex")
+    private var chosenPaletteIndex = 0
 
     /// Whether to show the editor for the specified palette.
     @State private var paletteToEdit: Palette?
