@@ -39,7 +39,7 @@ struct EmojiArtDocumentView: View {
     @GestureState private var gestureEmojiPanOffset: (emoji: EmojiArtModel.Emoji?, offset: CGSize) = (nil, .zero)
 
     /// The default emoji font size.
-    private let defaultEmojiFontSize: CGFloat = 38
+    @ScaledMetric private var defaultEmojiFontSize: CGFloat = 38
 
     /// The view body.
     var body: some View {
