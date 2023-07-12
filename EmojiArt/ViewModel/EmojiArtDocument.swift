@@ -7,13 +7,37 @@
 
 import SwiftUI
 import Combine
+import UniformTypeIdentifiers
+
+extension UTType {
+    static let emojiart = UTType(exportedAs: "edu.stanford.cs193p.kpa.emojiart")
+}
 
 /// A view model for a document.
-class EmojiArtDocument: ObservableObject {
+class EmojiArtDocument: ReferenceFileDocument {
+    static var readableContentTypes = [UTType.emojiart]
+    static var writableContentTypes = [UTType.emojiart]
+
+    func snapshot(contentType: UTType) throws -> Data {
+        try emojiArt.json()
+    }
+
+    func fileWrapper(snapshot: Data, configuration: WriteConfiguration) throws -> FileWrapper {
+        FileWrapper(regularFileWithContents: snapshot)
+    }
+
+    required init(configuration: ReadConfiguration) throws {
+        if let data = configuration.file.regularFileContents {
+            emojiArt = try EmojiArtModel(json: data)
+            fetchBackgroundImageDataIfNecessary()
+        } else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+    }
+
     /// The underlying document model.
     @Published private(set) var emojiArt: EmojiArtModel {
         didSet {
-            scheduleAutosave()
             if emojiArt.background != oldValue.background {
                 fetchBackgroundImageDataIfNecessary()
             }
@@ -34,12 +58,7 @@ class EmojiArtDocument: ObservableObject {
 
     /// Creates an empy document or autoloads the previously saved version if available.
     init() {
-        if let url = Autosave.url, let autosavedEmojiArt = try? EmojiArtModel(url: url) {
-            emojiArt = autosavedEmojiArt
-            fetchBackgroundImageDataIfNecessary()
-        } else {
-            emojiArt = EmojiArtModel()
-        }
+        emojiArt = EmojiArtModel()
     }
 
     /// The emojis comprising the document.
@@ -47,48 +66,6 @@ class EmojiArtDocument: ObservableObject {
 
     /// The background of the document.
     var background: EmojiArtModel.Background { emojiArt.background }
-
-    /// Saves the document to the given `url`.
-    private func save(to url: URL) {
-        let thisfunction = "\(String(describing: self)).\(#function)"
-        do {
-            let data = try emojiArt.json()
-            print("\(thisfunction) json = \(String(data: data, encoding: .utf8) ?? "nil")")
-            try data.write(to: url)
-            print("\(thisfunction) success!")
-        } catch let encodingError where encodingError is EncodingError {
-            print("\(thisfunction) could not encode EmojiArt as JSON because \(encodingError.localizedDescription)")
-        } catch {
-            print("\(thisfunction) error = \(error)")
-        }
-    }
-
-    /// Autosave settings.
-    private enum Autosave {
-        private static let filename = "Autosaved.emojiart"
-        static let coalescingInterval = 5.0
-        static var url: URL? {
-            let documentDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
-            return documentDirectory?.appendingPathComponent(filename)
-        }
-    }
-
-    /// Saves the document to a predefined location.
-    private func autosave() {
-        if let url = Autosave.url {
-            save(to: url)
-        }
-    }
-
-    private var autosaveTimer: Timer?
-
-    /// Schedules a new autosave cancelling any existing autosaves.
-    private func scheduleAutosave() {
-        autosaveTimer?.invalidate()
-        autosaveTimer = Timer.scheduledTimer(withTimeInterval: Autosave.coalescingInterval, repeats: false) { _ in
-            self.autosave()
-        }
-    }
 
     /// Sets the `backgrounImage` property based on the `background` setting.
     private func fetchBackgroundImageDataIfNecessary() {
