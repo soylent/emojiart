@@ -26,6 +26,7 @@ class EmojiArtDocument: ReferenceFileDocument {
         FileWrapper(regularFileWithContents: snapshot)
     }
 
+    /// Creates an instance from the given `configuration`.
     required init(configuration: ReadConfiguration) throws {
         if let data = configuration.file.regularFileContents {
             emojiArt = try EmojiArtModel(json: data)
@@ -97,35 +98,57 @@ class EmojiArtDocument: ReferenceFileDocument {
         }
     }
 
+    /// Performs the given `action` registering its undo and `actionName` with  `undoManager`.
+    private func undoablyPerform(actionNamed actionName: String, with undoManager: UndoManager?, action: () -> Void) {
+        let oldEmojiArt = emojiArt
+        action()
+        undoManager?.registerUndo(withTarget: self) { myself in
+            myself.undoablyPerform(actionNamed: actionName, with: undoManager) {
+                myself.emojiArt = oldEmojiArt
+            }
+        }
+        undoManager?.setActionName(actionName)
+    }
+
     // MARK: - Intents
 
     /// Sets the background to the given value.
-    func setBackground(_ background: EmojiArtModel.Background) {
-        emojiArt.background = background
+    func setBackground(_ background: EmojiArtModel.Background, with undoManager: UndoManager?) {
+        undoablyPerform(actionNamed: "Set Background", with: undoManager) {
+            emojiArt.background = background
+        }
     }
 
     /// Adds an emoji of the given `size` at the specified `location`.
-    func addEmoji(_ text: String, at location: (x: Int, y: Int), size: CGFloat) {
-        emojiArt.addEmoji(text, at: location, size: Int(size))
+    func addEmoji(_ text: String, at location: (x: Int, y: Int), size: CGFloat, with undoManager: UndoManager?) {
+        undoablyPerform(actionNamed: "Add \(text)", with: undoManager) {
+            emojiArt.addEmoji(text, at: location, size: Int(size))
+        }
     }
 
     /// Moves the `emoji` by the given `offset`.
-    func moveEmoji(_ emoji: EmojiArtModel.Emoji, by offset: CGSize) {
+    func moveEmoji(_ emoji: EmojiArtModel.Emoji, by offset: CGSize, with undoManager: UndoManager?) {
         if let index = emojiArt.emojis.index(matching: emoji) {
-            emojiArt.emojis[index].x += Int(offset.width)
-            emojiArt.emojis[index].y += Int(offset.height)
+            undoablyPerform(actionNamed: "Move", with: undoManager) {
+                emojiArt.emojis[index].x += Int(offset.width)
+                emojiArt.emojis[index].y += Int(offset.height)
+            }
         }
     }
 
     /// Scales the `emoji` by the given `scale`
-    func scaleEmoji(_ emoji: EmojiArtModel.Emoji, by scale: CGFloat) {
+    func scaleEmoji(_ emoji: EmojiArtModel.Emoji, by scale: CGFloat, with undoManager: UndoManager?) {
         if let index = emojiArt.emojis.index(matching: emoji) {
-            emojiArt.emojis[index].size = Int((CGFloat(emojiArt.emojis[index].size) * scale).rounded(.toNearestOrAwayFromZero))
+            undoablyPerform(actionNamed: "Scale", with: undoManager) {
+                emojiArt.emojis[index].size = Int((CGFloat(emojiArt.emojis[index].size) * scale).rounded(.toNearestOrAwayFromZero))
+            }
         }
     }
 
     /// Removes the given `emoji` from the document.
-    func removeEmoji(_ emoji: EmojiArtModel.Emoji) {
-        emojiArt.emojis.remove(emoji)
+    func removeEmoji(_ emoji: EmojiArtModel.Emoji, with undoManager: UndoManager?) {
+        undoablyPerform(actionNamed: "Remove", with: undoManager) {
+            emojiArt.emojis.remove(emoji)
+        }
     }
 }

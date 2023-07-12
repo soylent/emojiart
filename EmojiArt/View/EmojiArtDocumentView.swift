@@ -41,6 +41,9 @@ struct EmojiArtDocumentView: View {
     /// The default emoji font size.
     @ScaledMetric private var defaultEmojiFontSize: CGFloat = 38
 
+    /// The undo manager.
+    @Environment(\.undoManager) private var undoManager
+
     /// The view body.
     var body: some View {
         VStack(spacing: 0) {
@@ -130,13 +133,13 @@ struct EmojiArtDocumentView: View {
     private func drop(providers: [NSItemProvider], at location: CGPoint, in geometry: GeometryProxy) -> Bool {
         var found = providers.loadFirstObject(ofType: URL.self) { url in
             autozoom = true
-            document.setBackground(.url(url.imageURL))
+            document.setBackground(.url(url.imageURL), with: undoManager)
         }
         if !found {
             found = providers.loadFirstObject(ofType: UIImage.self) { image in
                 if let data = image.jpegData(compressionQuality: 1.0) {
                     autozoom = true
-                    document.setBackground(.imageData(data))
+                    document.setBackground(.imageData(data), with: undoManager)
                 }
             }
         }
@@ -146,7 +149,8 @@ struct EmojiArtDocumentView: View {
                     document.addEmoji(
                         String(emoji),
                         at: convertToEmojiCoordinates(at: location, in: geometry),
-                        size: defaultEmojiFontSize / zoomScale
+                        size: defaultEmojiFontSize / zoomScale,
+                        with: undoManager
                     )
                 }
             }
@@ -238,7 +242,7 @@ struct EmojiArtDocumentView: View {
                     steadyStateZoomScale *= finalGestureZoomScale
                 } else {
                     for emoji in selectedEmojis {
-                        document.scaleEmoji(emoji, by: finalGestureZoomScale)
+                        document.scaleEmoji(emoji, by: finalGestureZoomScale, with: undoManager)
                     }
                 }
             }
@@ -271,7 +275,8 @@ struct EmojiArtDocumentView: View {
             .onEnded { finalDragGestureValue in
                 let emojisToMove = selectedEmojis.isEmpty ? [emoji] : selectedEmojis
                 for emoji in emojisToMove {
-                    document.moveEmoji(emoji, by: finalDragGestureValue.translation / zoomScale)
+                    document.moveEmoji(emoji, by: finalDragGestureValue.translation / zoomScale,
+                                       with: undoManager)
                 }
             }
     }
@@ -279,7 +284,7 @@ struct EmojiArtDocumentView: View {
     /// Returns a gesture to remove the given `emoji` on a long press.
     private func removeEmojiGesture(_ emoji: EmojiArtModel.Emoji) -> some Gesture {
         LongPressGesture().onEnded { _ in
-            document.removeEmoji(emoji)
+            document.removeEmoji(emoji, with: undoManager)
             selectedEmojis.remove(emoji)
         }
     }
