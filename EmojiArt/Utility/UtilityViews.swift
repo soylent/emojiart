@@ -62,59 +62,15 @@ struct AnimatedActionButton: View {
 struct IdentifiableAlert: Identifiable {
     var id: String
     var alert: () -> Alert
-}
 
-struct UndoButton: View {
-    let undo: String?
-    let redo: String?
-
-    @Environment(\.undoManager) private var undoManager
-
-    var body: some View {
-        let canUndo = undoManager?.canUndo ?? false
-        let canRedo = undoManager?.canRedo ?? false
-
-        if canUndo || canRedo {
-            Button {
-                if canUndo {
-                    undoManager?.undo()
-                } else {
-                    undoManager?.redo()
-                }
-            } label: {
-                if canUndo {
-                    Image(systemName: "arrow.uturn.backward.circle")
-                } else {
-                    Image(systemName: "arrow.uturn.forward.circle")
-                }
-            }
-            .contextMenu {
-                if canUndo {
-                    Button {
-                        undoManager?.undo()
-                    } label: {
-                        Label(undo ?? "Undo", systemImage: "arrow.uturn.backward")
-                    }
-                }
-                if canRedo {
-                    Button {
-                        undoManager?.redo()
-                    } label: {
-                        Label(redo ?? "Redo", systemImage: "arrow.uturn.forward")
-                    }
-                }
-
-            }
-        }
+    init(title: String, message: String) {
+        id = title + message
+        alert = { Alert(title: Text(title), message: Text(message), dismissButton: .default(Text("OK"))) }
     }
-}
 
-extension UndoManager {
-    var optionalUndoMenuItemTitle: String? {
-        canUndo ? undoMenuItemTitle : nil
-    }
-    var optionalRedoMenuItemTitle: String? {
-        canRedo ? redoMenuItemTitle : nil
+    init(id: String, alert: @escaping () -> Alert) {
+        self.id = id
+        self.alert = alert
     }
 }
 
@@ -142,6 +98,30 @@ extension View {
             }
         } else {
             self
+        }
+    }
+}
+
+extension View {
+    func compactableToolbar<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        self.toolbar {
+            content().modifier(CompactableIntoContextMenu())
+        }
+    }
+}
+
+struct CompactableIntoContextMenu: ViewModifier {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    func body(content: Content) -> some View {
+        if horizontalSizeClass == .compact {
+            Button {
+            } label: {
+                Image(systemName: "ellipsis.circle")
+            }
+                .contextMenu { content }
+        } else {
+            content
         }
     }
 }

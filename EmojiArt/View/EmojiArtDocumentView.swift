@@ -86,22 +86,43 @@ struct EmojiArtDocumentView: View {
                     zoomToFit(image, in: geometry.size)
                 }
             }
-            .toolbar {
-                UndoButton(
-                    undo: undoManager?.optionalUndoMenuItemTitle,
-                    redo: undoManager?.optionalRedoMenuItemTitle
-                )
+            .compactableToolbar {
+                AnimatedActionButton(title: "Paste Background", systemImage: "doc.on.clipboard") {
+                    pasteBackground()
+                }
+                if let undoManager {
+                    if undoManager.canUndo {
+                        AnimatedActionButton(title: undoManager.undoActionName, systemImage: "arrow.uturn.backward") {
+                            undoManager.undo()
+                        }
+                    }
+                    if undoManager.canRedo {
+                        AnimatedActionButton(title: undoManager.undoActionName, systemImage: "arrow.uturn.forward") {
+                            undoManager.redo()
+                        }
+                    }
+                }
             }
         }
     }
 
+    private func pasteBackground() {
+        if let imageData = UIPasteboard.general.image?.jpegData(compressionQuality: 1.0) {
+            document.setBackground(.imageData(imageData), with: undoManager)
+        } else if let url = UIPasteboard.general.url?.imageURL {
+            document.setBackground(.url(url), with: undoManager)
+        } else {
+            alertToShow = IdentifiableAlert(title: "Paste Background", message: "There is no image currently on the pasteboard." )
+        }
+    }
+
     /// Returns the document background that fits within the given `geometry`.
+    @ViewBuilder
     private func drawBackground(in geometry: GeometryProxy) -> some View {
-        Color.white.overlay(
-            OptionalImage(uiImage: document.backgroundImage)
-                .scaleEffect(zoomScale)
-                .position(convertFromEmojiCoordinates((0, 0), in: geometry))
-        )
+        Color.white
+        OptionalImage(uiImage: document.backgroundImage)
+            .scaleEffect(zoomScale)
+            .position(convertFromEmojiCoordinates((0, 0), in: geometry))
         .gesture(doubleTapToZoom(in: geometry.size).exclusively(before: singleTapToDeselect()))
 
     }
@@ -126,13 +147,7 @@ struct EmojiArtDocumentView: View {
 
     /// Shows an alert in case of a background image fetch failure.
     private func showBackgroundImageFetchFailedAlert(_ url: URL) {
-        alertToShow = IdentifiableAlert(id: "fetch failed: " + url.absoluteString) {
-            Alert(
-                title: Text("Background Image Fetch"),
-                message: Text("Couldn't load image from \(url)"),
-                dismissButton: .default(Text("OK"))
-            )
-        }
+        alertToShow = IdentifiableAlert(title: "Background Image Fetch", message: "Couldn't load image from \(url)")
     }
 
     /// Handles drag & drop for images and emojis.
