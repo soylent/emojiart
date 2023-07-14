@@ -117,3 +117,31 @@ extension UndoManager {
         canRedo ? redoMenuItemTitle : nil
     }
 }
+
+extension View {
+    @ViewBuilder
+    func wrappedInNavigationStackToMakeDismissable(_ dismiss: (() -> Void)?) -> some View {
+        if let dismiss, UIDevice.current.userInterfaceIdiom != .pad {
+            NavigationStack {
+                self
+                    .navigationBarTitleDisplayMode(.inline)
+                    .dismissable(dismiss)
+            }
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func dismissable(_ dismiss: (() -> Void)?) -> some View {
+        if let dismiss, UIDevice.current.userInterfaceIdiom != .pad {
+            self.toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") { dismiss() }
+                }
+            }
+        } else {
+            self
+        }
+    }
+}

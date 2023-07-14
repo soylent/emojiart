@@ -43,13 +43,9 @@ struct PaletteManager: View {
             }
             .navigationTitle("Manage Palettes")
             .navigationBarTitleDisplayMode(.inline)
+            .dismissable { dismiss() }
             .toolbar {
-                ToolbarItem { EditButton() }
-                ToolbarItem(placement: .navigationBarLeading) {
-                    if isPresented, UIDevice.current.userInterfaceIdiom != .pad {
-                        Button("Close") { dismiss() }
-                    }
-                }
+                EditButton()
             }
             .environment(\.editMode, $editMode)
         }
