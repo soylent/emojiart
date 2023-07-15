@@ -34,6 +34,7 @@ extension View {
     }
 }
 
+/// Unavailable photo picker.
 struct CantDoItPhotoPicker: View {
     static let isAvailable = false
 
@@ -47,6 +48,7 @@ struct CantDoItPhotoPicker: View {
 typealias Camera = CantDoItPhotoPicker
 typealias PhotoLibrary = CantDoItPhotoPicker
 
+/// Cross-platform pasteboard.
 struct Pasteboard {
     static var imageData: Data? {
         NSPasteboard.general.data(forType: .tiff) ?? NSPasteboard.general.data(forType: .png)

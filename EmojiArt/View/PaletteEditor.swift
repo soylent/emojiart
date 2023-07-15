@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// Palette editor form.
+/// Palette edit form.
 struct PaletteEditor: View {
     /// The palette being edited.
     @Binding var palette: Palette
@@ -15,7 +15,7 @@ struct PaletteEditor: View {
     /// Emojis to add to the palette.
     @State private var emojisToAdd = ""
 
-    /// The view body.
+    /// Palette edit form view.
     var body: some View {
         Form {
             nameSection

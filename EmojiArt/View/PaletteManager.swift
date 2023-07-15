@@ -21,7 +21,7 @@ struct PaletteManager: View {
     /// Whether the palette list is editable.
     @State private var editMode: EditMode = .inactive
 
-    /// The view body.
+    /// Palette list view.
     var body: some View {
         // NOTE: Due to a bug in SwiftUI, animations are not working in NavigationStack.
         // https://developer.apple.com/forums/thread/728132

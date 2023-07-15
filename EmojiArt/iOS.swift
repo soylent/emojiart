@@ -47,6 +47,7 @@ extension View {
     }
 }
 
+/// Cross-platform pasteboard.
 struct Pasteboard {
     static var imageData: Data? {
         UIPasteboard.general.image?.jpegData(compressionQuality: 1.0)

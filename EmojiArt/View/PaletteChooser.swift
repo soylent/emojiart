@@ -28,7 +28,7 @@ struct PaletteChooser: View {
     /// Whether to show the palette manager.
     @State private var managing = false
 
-    /// The view body.
+    /// The palette control button and the current palette's emojis.
     var body: some View {
         HStack {
             paletteControlButton

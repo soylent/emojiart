@@ -47,7 +47,7 @@ struct EmojiArtDocumentView: View {
     /// The undo manager.
     @Environment(\.undoManager) private var undoManager
 
-    /// The view body.
+    /// The main app view.
     var body: some View {
         VStack(spacing: 0) {
             documentBody
