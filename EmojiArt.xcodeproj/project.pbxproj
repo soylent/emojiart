@@ -28,8 +28,8 @@
 
 /* Begin PBXFileReference section */
 		CE02386F2A62058100C1800E /* Camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
-		CE0238712A62183600C1800E /* PhotoLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibrary.swift; sourceTree = SOURCE_ROOT; };
-		CE0238A72A6260A000C1800E /* macOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macOS.swift; sourceTree = SOURCE_ROOT; };
+		CE0238712A62183600C1800E /* PhotoLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhotoLibrary.swift; path = EmojiArt/View/PhotoLibrary.swift; sourceTree = SOURCE_ROOT; };
+		CE0238A72A6260A000C1800E /* macOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = macOS.swift; path = EmojiArt/macOS.swift; sourceTree = SOURCE_ROOT; };
 		CE0238A92A62610E00C1800E /* iOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOS.swift; sourceTree = "<group>"; };
 		CE17351D2A5E4A0A00B5F17F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CE7E996F2A49152D00A8320D /* PaletteChooser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PaletteChooser.swift; path = EmojiArt/View/PaletteChooser.swift; sourceTree = SOURCE_ROOT; };
@@ -71,8 +71,8 @@
 		CE7E99762A4AAD8A00A8320D /* View */ = {
 			isa = PBXGroup;
 			children = (
-				CE0238712A62183600C1800E /* PhotoLibrary.swift */,
 				CE87FD152A393407001B6CAC /* EmojiArtDocumentView.swift */,
+				CE0238712A62183600C1800E /* PhotoLibrary.swift */,
 				CE02386F2A62058100C1800E /* Camera.swift */,
 				CE7E99732A4A7B1400A8320D /* PaletteManager.swift */,
 				CE7E99712A494D6900A8320D /* PaletteEditor.swift */,
@@ -118,8 +118,8 @@
 		CE87FD122A393407001B6CAC /* EmojiArt */ = {
 			isa = PBXGroup;
 			children = (
-				CE0238A92A62610E00C1800E /* iOS.swift */,
 				CE0238A72A6260A000C1800E /* macOS.swift */,
+				CE0238A92A62610E00C1800E /* iOS.swift */,
 				CE17351D2A5E4A0A00B5F17F /* Info.plist */,
 				CE7E99782A4AC2E000A8320D /* Utility */,
 				CE7E99772A4AAD9000A8320D /* ViewModel */,
