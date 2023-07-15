@@ -74,33 +74,6 @@ struct IdentifiableAlert: Identifiable {
     }
 }
 
-extension View {
-    @ViewBuilder
-    func wrappedInNavigationStackToMakeDismissable(_ dismiss: (() -> Void)?) -> some View {
-        if let dismiss, UIDevice.current.userInterfaceIdiom != .pad {
-            NavigationStack {
-                self
-                    .navigationBarTitleDisplayMode(.inline)
-                    .dismissable(dismiss)
-            }
-        } else {
-            self
-        }
-    }
-
-    @ViewBuilder
-    func dismissable(_ dismiss: (() -> Void)?) -> some View {
-        if let dismiss, UIDevice.current.userInterfaceIdiom != .pad {
-            self.toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") { dismiss() }
-                }
-            }
-        } else {
-            self
-        }
-    }
-}
 
 extension View {
     func compactableToolbar<Content: View>(@ViewBuilder content: () -> Content) -> some View {
@@ -111,10 +84,15 @@ extension View {
 }
 
 struct CompactableIntoContextMenu: ViewModifier {
+    #if os(iOS)
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    private var compact: Bool { horizontalSizeClass == .compact }
+    #else
+    private let compact = false
+    #endif
 
     func body(content: Content) -> some View {
-        if horizontalSizeClass == .compact {
+        if compact {
             Menu { content } label: { Image(systemName: "ellipsis.circle") }
         } else {
             content

@@ -69,7 +69,7 @@ struct EmojiArtDocumentView: View {
                 }
             }
             .clipped()
-            .onDrop(of: [.plainText, .url, .image], isTargeted: nil) { providers, location in
+            .onDrop(of: [.utf8PlainText, .url, .image], isTargeted: nil) { providers, location in
                 drop(providers: providers, at: location, in: geometry)
             }
             .gesture(panGesture().simultaneously(with: zoomGesture()))
@@ -103,6 +103,7 @@ struct EmojiArtDocumentView: View {
                         backgroundPicker = .library
                     }
                 }
+                #if os(iOS)
                 if let undoManager {
                     if undoManager.canUndo {
                         AnimatedActionButton(title: undoManager.undoActionName, systemImage: "arrow.uturn.backward") {
@@ -115,6 +116,7 @@ struct EmojiArtDocumentView: View {
                         }
                     }
                 }
+                #endif
             }
             .sheet(item: $backgroundPicker) { picker in
                 switch picker {
@@ -136,7 +138,7 @@ struct EmojiArtDocumentView: View {
 
     private func handlePickedBackgroundImage(_ image: UIImage?) {
         autozoom = true
-        if let imageData = image?.jpegData(compressionQuality: 1.0) {
+        if let imageData = image?.imageData {
             document.setBackground(.imageData(imageData), with: undoManager)
         }
         backgroundPicker = nil
@@ -144,9 +146,9 @@ struct EmojiArtDocumentView: View {
 
     private func pasteBackground() {
         autozoom = true
-        if let imageData = UIPasteboard.general.image?.jpegData(compressionQuality: 1.0) {
+        if let imageData = Pasteboard.imageData {
             document.setBackground(.imageData(imageData), with: undoManager)
-        } else if let url = UIPasteboard.general.url?.imageURL {
+        } else if let url = Pasteboard.imageURL {
             document.setBackground(.url(url), with: undoManager)
         } else {
             alertToShow = IdentifiableAlert(title: "Paste Background", message: "There is no image currently on the pasteboard." )
@@ -191,14 +193,16 @@ struct EmojiArtDocumentView: View {
             autozoom = true
             document.setBackground(.url(url.imageURL), with: undoManager)
         }
+        #if os(iOS)
         if !found {
             found = providers.loadFirstObject(ofType: UIImage.self) { image in
-                if let data = image.jpegData(compressionQuality: 1.0) {
+                if let data = image.imageData {
                     autozoom = true
                     document.setBackground(.imageData(data), with: undoManager)
                 }
             }
         }
+        #endif
         if !found {
             found = providers.loadFirstObject(ofType: String.self) { string in
                 if let emoji = string.first, emoji.isEmoji {
