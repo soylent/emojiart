@@ -115,11 +115,7 @@ struct CompactableIntoContextMenu: ViewModifier {
 
     func body(content: Content) -> some View {
         if horizontalSizeClass == .compact {
-            Button {
-            } label: {
-                Image(systemName: "ellipsis.circle")
-            }
-                .contextMenu { content }
+            Menu { content } label: { Image(systemName: "ellipsis.circle") }
         } else {
             content
         }
