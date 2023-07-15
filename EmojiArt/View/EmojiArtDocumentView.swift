@@ -18,6 +18,9 @@ struct EmojiArtDocumentView: View {
     /// Whether to show the specified alert.
     @State private var alertToShow: IdentifiableAlert?
 
+    /// Whether to show a background image picker.
+    @State private var backgroundPicker: BackgroundPickerType?
+
     /// Whether to autoscale the background image.
     @State var autozoom = false
 
@@ -90,6 +93,16 @@ struct EmojiArtDocumentView: View {
                 AnimatedActionButton(title: "Paste Background", systemImage: "doc.on.clipboard") {
                     pasteBackground()
                 }
+                if Camera.isAvailable {
+                    AnimatedActionButton(title: "Take Photo", systemImage: "camera") {
+                        backgroundPicker = .camera
+                    }
+                }
+                if PhotoLibrary.isAvailable {
+                    AnimatedActionButton(title: "Search Photos", systemImage: "photo") {
+                        backgroundPicker = .library
+                    }
+                }
                 if let undoManager {
                     if undoManager.canUndo {
                         AnimatedActionButton(title: undoManager.undoActionName, systemImage: "arrow.uturn.backward") {
@@ -103,10 +116,34 @@ struct EmojiArtDocumentView: View {
                     }
                 }
             }
+            .sheet(item: $backgroundPicker) { picker in
+                switch picker {
+                case .camera:
+                    Camera(handlePickedImage: { image in handlePickedBackgroundImage(image) })
+                case .library:
+                    PhotoLibrary(handlePickedImage: { image in handlePickedBackgroundImage(image) })
+                }
+            }
         }
     }
 
+    private enum BackgroundPickerType: Identifiable {
+        case camera
+        case library
+
+        var id: Self { self }
+    }
+
+    private func handlePickedBackgroundImage(_ image: UIImage?) {
+        autozoom = true
+        if let imageData = image?.jpegData(compressionQuality: 1.0) {
+            document.setBackground(.imageData(imageData), with: undoManager)
+        }
+        backgroundPicker = nil
+    }
+
     private func pasteBackground() {
+        autozoom = true
         if let imageData = UIPasteboard.general.image?.jpegData(compressionQuality: 1.0) {
             document.setBackground(.imageData(imageData), with: undoManager)
         } else if let url = UIPasteboard.general.url?.imageURL {
@@ -124,9 +161,7 @@ struct EmojiArtDocumentView: View {
             .scaleEffect(zoomScale)
             .position(convertFromEmojiCoordinates((0, 0), in: geometry))
         .gesture(doubleTapToZoom(in: geometry.size).exclusively(before: singleTapToDeselect()))
-
     }
-
 
     /// Returns the document emojis positioned withing the given `geometry`.
     private func drawEmojis(in geometry: GeometryProxy) -> some View {
